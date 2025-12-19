@@ -1,0 +1,21 @@
+experiment_name: "FINAL_CNN_LSTM"
+
+model:
+  embeddings_dim: 32
+  labels_number: 3
+  hidden_dim: 256
+  n_layers: 3
+  dropout: 0.4
+  window: [3, 5]
+  use_batch_norm: true
+  use_attention: false
+  use_lstm: true
+
+training:
+  batch_size: 16
+  num_epochs: 150
+  patience: 20
+  lr: 1e-3
+  device: "cuda"
+  random_state: 42
+  optimizer: "AdamW"

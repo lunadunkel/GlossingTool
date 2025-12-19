@@ -1,0 +1,16 @@
+torch
+jaxtyping
+numpy
+tqdm
+scikit-learn
+python-dotenv
+PyYAML
+huggingface_hub
+sentencepiece
+seaborn
+fastapi
+pathlib
+uvicorn
+pyyaml
+svgling
+pandas
