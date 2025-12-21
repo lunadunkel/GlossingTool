@@ -2,7 +2,7 @@ from typing import List, Sequence
 from torch.utils.data import DataLoader
 from src.core.base_classes import DataModule, EntryDataset
 from src.core.data.datasets import SegmEntry, TaggerEntry
-from src.training.utils.initializing import register_datamodule
+from src.core.initializing import register_datamodule
 
 @register_datamodule("segmentation")
 class SegmDataModule(DataModule):

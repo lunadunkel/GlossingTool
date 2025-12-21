@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Sequence
+from typing import Optional, Any, Sequence, Union
 from torch.utils.data import DataLoader
 import numpy as np
 import torch
@@ -108,3 +108,8 @@ class SystemPipeline(ABC):
             список выходных объектов
         """
         raise NotImplementedError
+
+class BaseInference(ABC):
+    @abstractmethod
+    def predict(self, data: Union[List[str], str]) -> List[str]:
+        pass

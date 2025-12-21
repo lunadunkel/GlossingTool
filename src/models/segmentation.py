@@ -2,7 +2,7 @@ from typing import cast
 import torch
 import torch.nn as nn
 from src.models.base_model import BasicNeuralClassifier
-from src.training.utils.initializing import register_model
+from src.core.initializing import register_model
 
 @register_model("segmentation")
 class MorphSegmentationCNN(BasicNeuralClassifier):

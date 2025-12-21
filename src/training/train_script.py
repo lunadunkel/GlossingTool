@@ -25,7 +25,7 @@ from src.models.lemma_tagger import LemmaAffixTagger
 from src.pipelines.segmentation_pipeline import SegmentationPipeline
 from src.models.segmentation import MorphSegmentationCNN
 from src.training.utils.load_data import clone_and_load_data
-from src.training.utils.initializing import MODEL_REGISTRY, DATAMODULE_REGISTRY, PIPELINE_REGISTRY
+from src.core.initializing import MODEL_REGISTRY, DATAMODULE_REGISTRY, PIPELINE_REGISTRY
 
 def main():
     parser = argparse.ArgumentParser()

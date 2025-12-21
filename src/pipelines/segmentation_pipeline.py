@@ -3,7 +3,7 @@ from src.core.base_classes import SystemPipeline
 from src.core.data.datasets import SegmEntry
 from src.core.data.preprocessing import GlossEntry
 from src.encoders.segmentation_encoder import MorphBIOEncoder
-from src.training.utils.initializing import register_pipeline
+from src.core.initializing import register_pipeline
 
 
 @register_pipeline("segmentation")

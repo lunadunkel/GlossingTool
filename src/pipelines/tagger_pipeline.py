@@ -5,7 +5,7 @@ from src.core.data.datasets import TaggerEntry
 from src.core.data.preprocessing import GlossEntry, InterGloss
 from src.encoders.tagger_encoder import CharLemmaAffixEncoder
 from src.pipelines.glossing_pipeline import GlossingPipeline
-from src.training.utils.initializing import register_pipeline
+from src.core.initializing import register_pipeline
 
 @register_pipeline("lemma_tagger")
 class TaggerPipeline(SystemPipeline):

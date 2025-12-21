@@ -20,7 +20,18 @@ from src.models.lemma_tagger import LemmaAffixTagger
 from src.pipelines.segmentation_pipeline import SegmentationPipeline
 from src.models.segmentation import MorphSegmentationCNN
 from src.training.utils.load_data import clone_and_load_data
-from src.training.utils.initializing import MODEL_REGISTRY, DATAMODULE_REGISTRY, PIPELINE_REGISTRY
+from src.core.initializing import MODEL_REGISTRY, DATAMODULE_REGISTRY, PIPELINE_REGISTRY
+
+def write_data(task, file_path, text, translation):
+    os.makedirs(file_path, exist_ok=True)
+    match task:
+        case 'segmentation':
+            with open(f'{file_path}/temp_{task}.txt', 'w') as file:
+                for num, (niv, rus) in enumerate(zip(text, translation), 1):
+                    file.write(f'{num}>\t{niv}\n')
+                    file.write(f'{num}<\t\n')
+                    file.write(f'{num}=\t{rus}\n')
+                    file.write('\n')
 
 def main():
     parser = argparse.ArgumentParser()
@@ -76,6 +87,7 @@ def main():
 
     data_source = GlossDataSource(args.data_path)
     inference_data = ['\t'.join(x.segmented.split()) for x in data_source.get_gloss_entries()]
+    translation_data = [x.translation for x in data_source.get_gloss_entries()]
     if not inference_data:
         raise RuntimeError("Данные отсутствуют")
 
@@ -83,12 +95,12 @@ def main():
     inference = Inference(config=config, model=model, logger=logger, device=device)
     
     predictions = inference.predict(inference_data)
-    os.makedirs('src/core/data/temp', exist_ok=True)
-    with open('src/core/data/temp/temp_segm.txt', 'w') as file:
-        for line in predictions:
-            file.write(line)
-            file.write('\n\n')
-    logger.info('Результаты сегментации записаны в \'src/core/data/temp_segm.txt\'')
+    write_data(model_name, 'src/core/data/temp', predictions, translation_data)
+    for i, p in zip(inference_data, predictions):
+        print(i)
+        print(p)
+    logger.info(f'Результаты {config.task} записаны в \'src/core/data/temp_{config.task}.txt\'')
+
 
 if __name__ == "__main__":
     main()
