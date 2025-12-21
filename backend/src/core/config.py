@@ -43,29 +43,6 @@ class SegmentationConfig(ModelConfig):
 
 
 @dataclass
-class LemmaTaggerConfig(ModelConfig):
-    """Конфигурация лемма-аффикс таггера"""
-    emb_dim: int = 32
-    hidden_dim: int = 64
-    num_labels: int = 3  # SEP, LEMMA, AFFIX
-    dropout: float = 0.2
-    device: str = 'cpu'
-
-
-@dataclass
-class PosTaggerConfig(ModelConfig):
-    """Конфигурация PoS-tagger модели"""
-    word_vocab_size: int
-    char_vocab_size: int
-    num_labels: int
-    word_emb_dim: int = 128
-    char_emb_dim: int = 64
-    hidden_dim: int = 256
-    use_char_emb: bool = True
-    dropout: float = 0.3
-
-
-@dataclass
 class TrainingConfig:
     """Конфигурация обучения"""
     batch_size: int = 32
@@ -116,10 +93,6 @@ class ExperimentConfig:
         
         if task == 'segmentation':
             model = SegmentationConfig(**model_dict)
-        elif task == 'lemma_tagger':
-            model = LemmaTaggerConfig(**model_dict)
-        elif task == 'pos_tagging':
-            model = PosTaggerConfig(**model_dict)
         else:
             model = ModelConfig(**model_dict)
         
@@ -167,10 +140,6 @@ class InferenceConfig:
         
         if task == 'segmentation':
             model = SegmentationConfig(**model_dict)
-        elif task == 'lemma_tagger':
-            model = LemmaTaggerConfig(**model_dict)
-        elif task == 'pos_tagging':
-            model = PosTaggerConfig(**model_dict)
         else:
             model = ModelConfig(**model_dict)
         

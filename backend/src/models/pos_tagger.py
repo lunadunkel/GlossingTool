@@ -4,7 +4,7 @@ import torch.nn as nn
 from src.models.base_model import BasicNeuralClassifier
 from src.core.initializing import register_model
 
-@register_model("lemma_tagger")
+@register_model("pos_tagger")
 class PosTagger(BasicNeuralClassifier):
     def __init__(self, vocab_size: int, labels_number: int, device: str = "cpu", **kwargs):
         super().__init__(vocab_size, labels_number, device, **kwargs)
