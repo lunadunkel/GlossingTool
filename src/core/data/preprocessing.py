@@ -135,24 +135,20 @@ class ContentReader:
             self.current[key] = value
 
     def _check_content_type(self, line: str) -> Tuple[str, str]:
-        segmentation = re.match(r"\d+(?:_\d+)*>\s*(.*)$", line)
-        if segmentation:
+        if segmentation := re.match(r"\d+(?:_\d+)*>\s*(.*)$", line):
             return 'segmented', segmentation.group(1)
-        glossing = re.match(r"\d+(?:_\d+)*<\s*(.*)$", line)
-        if glossing:
+        if glossing := re.match(r"\d+(?:_\d+)*<\s*(.*)$", line):
             return 'glossed', glossing.group(1)
 
-        translation_line = re.match(r"(\d+(?:_\d+)*)=(.*)$", line)
         if line.startswith("#"):
             meta = line.lstrip("# \t")
             return 'metadata', meta
         
-        if translation_line:
+        if translation_line := re.match(r"(\d+(?:_\d+)*)=(.*)$", line):
             num, translation = translation_line.groups()
             self._add_line('line_num', num)
             return 'translation', translation
-        corrections = re.match(r'\d+@', line)
-        if corrections:
+        if re.match(r'\d+@', line):
             return 'corrections', ''
         return 'unknown', ''
         
