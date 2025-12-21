@@ -1,7 +1,10 @@
-experiment_name: "FINAL_CNN_LSTM"
+name: "CNN_LSTM"
+
+task: "segmentation"
 
 model:
-  embeddings_dim: 32
+  vocab_size: 95
+  emb_dim: 32
   labels_number: 3
   hidden_dim: 256
   n_layers: 3
@@ -15,7 +18,9 @@ training:
   batch_size: 16
   num_epochs: 150
   patience: 20
-  lr: 1e-3
+  learning_rate: 1e-3
   device: "cuda"
-  random_state: 42
+  random_seed: 42
   optimizer: "AdamW"
+
+device: 'cpu'

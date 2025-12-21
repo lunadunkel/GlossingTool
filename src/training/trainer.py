@@ -1,202 +1,166 @@
-"""
-Скрипт обучения модели
-
-Использование:
-    python scripts/train.py --model model --config configs/model.yaml
-"""
-
-import os
-import sys
-import argparse
+from abc import abstractmethod
 import logging
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
+import os
+import json
 import torch
-import random
-import numpy as np
-from src.training.utils.logger import setup_logger
-from src.core.config import ExperimentConfig
-from src.training.utils.seed import set_seed
-from src.core.data.datamodules import *
-from src.models.pos_tagger import PosTagger
-from src.models.lemma_tagger import LemmaAffixTagger
-from src.models.segmentation import MorphSegmentationCNN
-from src.training.utils.load_data import clone_and_load_data
-from src.training.utils.initializing import MODEL_REGISTRY, DATAMODULE_REGISTRY
+from typing import Type
+from tqdm import tqdm
+from src.core.config import TrainingConfig
+from torch.utils.data import DataLoader
+from src.models.base_model import BasicNeuralClassifier
+from src.training.utils.metrics import calculate_accuracy, calculate_word_level_accuracy
+# from scripts.training.utils.setup_logger import get_logger
+# from src.training.utils.validation import validate_model
 
-# from src.models.pos_tagger import create_pos_tagger
-# from src.training.trainers import PosTaggerTrainer
-# from src.data.datamodules import PoSDataModule
-# from src.data.readers import load_and_split_data
+class Trainer:
+    def __init__(self, model, exp_name: str,
+                 train_loader: DataLoader, val_loader: DataLoader,
+                 config: TrainingConfig, logger: logging.Logger, device: str = 'cpu'):
+        self.model = model
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.config = config
+        self.logger = logger
+        self.device = device
+        self.logger = logger
+        self.exp_name = exp_name
 
+    @abstractmethod
+    def predict(model, dataloader, device):
+        model.eval() # type: ignore 
+        with torch.no_grad():
+            for batch in dataloader:
+                input_ids = batch['input_ids'].to(device)
+                mask = model._prepare_mask(input_ids, batch.get('mask')) # type: ignore
+    
+    def validate(self, test=False):
+        self.model.eval() 
+        total_loss = 0.0
+        total_masked_tokens = 0
+        all_preds = []
+        all_labels = []
+        all_masks = []
 
-def main():
-    parser = argparse.ArgumentParser(description="Train PoS-tagger model")
-    parser.add_argument(
-        "--model",
-        type=str,
-        required=True,
-        help="Model name"
-    )
-    parser.add_argument(
-        "--config",
-        type=str,
-        required=True,
-        help="Path to config YAML file"
-    )
-    parser.add_argument(
-        "--data_path",
-        type=str,
-        required=False,
-        help="Path to data"
-    )
-    args = parser.parse_args()
-    
-    # Загрузка конфигурации
-    config = ExperimentConfig.from_yaml(args.config)
-    model_name = args.model
-    
-    if args.device:
-        config.model.device = args.device
-        config.training.device = args.device
-    
-    if torch.cuda.is_available() and config.training.device == "cuda":
-        device = "cuda"
-    else:
-        device = "cpu"
-    
-    config.model.device = device
-    
-    logger = setup_logger(
-        config.name,
-        log_dir=config.training.log_dir
-    )
-    
-    logger.info(f"="*80)
-    logger.info(f"Starting experiment: {config.name}")
-    logger.info(f"Task: {config.task}")
-    logger.info(f"Device: {device}")
-    logger.info(f"="*80)
-    
-    set_seed(config.training.random_seed)
-    logger.info(f"Random seed: {config.training.random_seed}")
-    
-    logger.info("Loading data...")
-    clone = True if args.data_path is not None else False
-    train_data, val_data, test_data = clone_and_load_data(config=config.data,
-                                                          clone=clone,
-                                                          data_path=args.data_path)
-    
-    logger.info(f"Train size: {len(train_data)}")
-    logger.info(f"Val size: {len(val_data)}")
-    logger.info(f"Test size: {len(test_data)}")
-    
-    
-    logger.info("Creating data loaders...")
+        with torch.no_grad():
+            for batch in self.val_loader:
+                input_ids = batch['input_ids'].to(self.device)
+                labels = batch['labels'].to(self.device)
+                mask = self.model._prepare_mask(input_ids, batch.get('mask'))
 
-    if model_name not in DATAMODULE_REGISTRY:
-        raise ValueError(f"Неизвестная модель: {model_name}")
+                outputs = self.model(input_ids, mask=mask)
+                log_probs = outputs['log_probs']
+                flat_log_probs = log_probs.view(-1, log_probs.size(-1))
+                flat_labels = labels.view(-1)
+                flat_mask = mask.view(-1)
 
-    if model_name not in MODEL_REGISTRY:
-        raise ValueError(f"Неизвестная модель: {model_name}")
+                loss = torch.nn.functional.nll_loss(flat_log_probs, flat_labels, reduction='none')
+                masked_loss = (loss * flat_mask).sum()
+                total_loss += masked_loss.item()
 
-    model = MODEL_REGISTRY[model_name]
+                preds = torch.argmax(log_probs, dim=-1).cpu().tolist()
+                num_masked = flat_mask.sum().item()
+                total_loss += (loss * flat_mask).sum().item()
+                total_masked_tokens += num_masked
+                labels_list = labels.cpu().tolist()
+                mask_list = mask.cpu().tolist()
 
+                for p, l, m in zip(preds, labels_list, mask_list):
+                    if not (len(p) == len(l) == len(m)):
+                        self.logger.error('Длины предсказаний, лейблов и масок не совпадают: pred={len(p)}, label={len(l)}, mask={len(m)}')
+                        raise ValueError(f"Length mismatch: pred={len(p)}, label={len(l)}, mask={len(m)}")
 
-    # datamodule = 
-#     datamodule = PoSDataModule(
-#         train_data=train_data,
-#         val_data=val_data,
-#         test_data=test_data,
-#         batch_size=config.training.batch_size,
-#         tokenizer_config=config.tokenizer,
-#         use_char_emb=config.model.use_char_emb
-#     )
-    
-#     train_loader = datamodule.train_dataloader()
-#     val_loader = datamodule.val_dataloader()
-#     test_loader = datamodule.test_dataloader()
-    
-#     logger.info(f"Train batches: {len(train_loader)}")
-#     logger.info(f"Val batches: {len(val_loader)}")
-#     logger.info(f"Test batches: {len(test_loader)}")
-    
-#     logger.info("Creating model...")
-#     model = create_pos_tagger(config.model)
-    
-#     num_params = sum(p.numel() for p in model.parameters())
-#     num_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-#     logger.info(f"Total parameters: {num_params:,}")
-#     logger.info(f"Trainable parameters: {num_trainable:,}")
-    
-#     # Создание Trainer
-#     logger.info("Creating trainer...")
-#     trainer = PosTaggerTrainer(
-#         model=model,
-#         train_loader=train_loader,
-#         val_loader=val_loader,
-#         config=config.training,
-#         use_char_emb=config.model.use_char_emb,
-#         logger=logger
-#     )
-    
-#     # Обучение
-#     logger.info("Starting training...")
-#     history = trainer.train()
-    
-#     # Сохранение истории
-#     history_path = os.path.join(
-#         config.training.log_dir,
-#         f"{config.name}_history.json"
-#     )
-#     import json
-#     with open(history_path, 'w') as f:
-#         json.dump(history, f, indent=2)
-#     logger.info(f"Training history saved to: {history_path}")
-    
-#     # Загрузка лучшей модели
-#     logger.info("Loading best model...")
-#     best_checkpoint_path = os.path.join(
-#         config.training.checkpoint_dir,
-#         f"{config.name}_best.pt"
-#     )
-    
-#     if os.path.exists(best_checkpoint_path):
-#         checkpoint = torch.load(best_checkpoint_path, map_location=device)
-#         model.load_state_dict(checkpoint['model_state_dict'])
-#         logger.info(f"Best model loaded from: {best_checkpoint_path}")
-    
-#     # Тестирование
-#     logger.info("Testing on test set...")
-#     model.eval()
-    
-#     test_metrics = trainer.validate_epoch(-1)  # -1 для обозначения теста
-    
-#     logger.info(f"Test Loss: {test_metrics['loss']:.4f}")
-#     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
-    
-#     # Сохранение финальных метрик
-#     final_metrics = {
-#         'best_val_accuracy': max(h['val_accuracy'] for h in history),
-#         'test_loss': test_metrics['loss'],
-#         'test_accuracy': test_metrics['accuracy']
-#     }
-    
-#     metrics_path = os.path.join(
-#         config.training.log_dir,
-#         f"{config.name}_final_metrics.json"
-#     )
-#     with open(metrics_path, 'w') as f:
-#         json.dump(final_metrics, f, indent=2)
-#     logger.info(f"Final metrics saved to: {metrics_path}")
-    
-#     logger.info("="*80)
-#     logger.info("Training completed successfully!")
-#     logger.info(f"Best checkpoint: {best_checkpoint_path}")
-#     logger.info("="*80)
+                all_preds.extend(preds)
+                all_labels.extend(labels_list)
+                all_masks.extend(mask_list)
 
+        avg_loss = total_loss / total_masked_tokens if total_masked_tokens > 0 else float('inf')
 
-# if __name__ == "__main__":
-#     main()
+        token_acc = calculate_accuracy(all_labels, all_preds, all_masks)
+        word_acc = calculate_word_level_accuracy(all_labels, all_preds)
+
+        return avg_loss, token_acc, word_acc
+
+    def train(self):
+        checkpoint_dir = self.config.checkpoint_dir
+        optimizer_name = self.config.optimizer
+        weight_decay = self.config.weight_decay
+        lr = float(self.config.learning_rate)
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        if optimizer_name == 'AdamW':
+            optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+        else:
+            self.logger.error('Оптимайзер отсуствует. Будет использоваться AdamW')
+            optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+
+        best_accuracy = 0.0
+        best_model_path = ""
+        early_stopping_counter = 0
+        history = []
+        num_epochs = self.config.num_epochs
+        for epoch in range(num_epochs):
+            self.model.train()
+            train_loss = 0.0
+            num_batches = 0
+
+            for batch in tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{num_epochs}"):
+                optimizer.zero_grad()
+                input_ids = batch['input_ids'].to(self.device)
+                labels = batch['labels'].to(self.device)
+                mask = self.model._prepare_mask(input_ids, batch.get('mask'))
+                outputs = self.model(input_ids, mask=mask)
+
+                loss = self.model.criterion(
+                    outputs['log_probs'].view(-1, outputs['log_probs'].size(-1)),
+                    labels.view(-1)
+                )
+                mask = mask.view(-1)
+                loss = (loss * mask).sum() / mask.sum()
+
+                loss.backward()
+                optimizer.step()
+
+                train_loss += loss.item()
+                num_batches += 1
+
+            avg_train_loss = train_loss / num_batches if num_batches > 0 else 0.0
+            self.logger.info(f"EPOCH: {epoch+1} Training Loss: {avg_train_loss:.4f}")
+
+            val_loss, val_accuracy, word_level_accuracy = self.validate()
+            self.logger.info(f"EPOCH: {epoch+1} Validation - Loss: {val_loss:.4f}, Accuracy: {val_accuracy:.4f}, Word-level: {word_level_accuracy:.4f}")
+
+            epoch_log = {
+                'epoch': epoch + 1,
+                'train_loss': avg_train_loss,
+                'val_loss': val_loss,
+                'val_accuracy': val_accuracy,
+                'val_word_accuracy': word_level_accuracy
+            }
+            history.append(epoch_log)
+
+            if word_level_accuracy > best_accuracy:
+                best_accuracy = word_level_accuracy
+                best_model_path = f"{self.exp_name}_best.pt"
+                checkpoint_path = os.path.join(checkpoint_dir, best_model_path)
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': val_loss,
+                    'accuracy': best_accuracy
+                }, checkpoint_path)
+                self.logger.info(f"Модель обновлена: {checkpoint_path}")
+                early_stopping_counter = 0
+            else:
+                early_stopping_counter += 1
+                if early_stopping_counter >= self.config.patience:
+                    self.logger.info("Ранняя остановка")
+                    self.logger.info(f"="*80)
+                    self.logger.info(f"Лучший word-level accuracy: {best_accuracy:.4f}")
+                    self.logger.info(f"Путь к модели: {os.path.join(checkpoint_dir, best_model_path)}")
+                    self.logger.info(f"="*80)
+                    break
+
+        log_file = f'{self.config.log_dir}/{self.exp_name}'
+        with open(f'{self.config.log_dir}/{self.exp_name}.json', 'w', encoding='utf-8') as f:
+            json.dump(history, f, indent=4, ensure_ascii=False)
+        self.logger.info(f"История обучения сохранена: '{log_file}.json")

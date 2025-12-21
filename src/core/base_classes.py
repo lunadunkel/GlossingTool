@@ -51,7 +51,7 @@ class DataEncoder(ABC):
     def clear(self) -> None:
         self.data.clear()
 
-    def return_data(self) -> List[Any]:
+    def return_data(self) -> Sequence[Any]:
         """Возвращает все накопленные данные."""
         return self.data
 
@@ -100,7 +100,7 @@ class EntryDataset(Dataset):
 class SystemPipeline(ABC):
     """Абстрактный базовый класс для всех пайплайнов обработки данных перед обучением / обработкой."""
     @abstractmethod
-    def run(self, inputs: List[Any]) -> List[Any]:
+    def run(self, inputs: Sequence[Any]) -> Sequence[Any]:
         """Запуск пайплайна: преобразование входных данных в выходные.
         Args:
             inputs: список входных объектов (тип зависит от задачи)

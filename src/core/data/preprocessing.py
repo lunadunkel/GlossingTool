@@ -3,7 +3,7 @@ from enum import Enum
 import os
 from pathlib import Path
 import re
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 class TokenType(Enum):
     """Тип токена"""
@@ -27,7 +27,7 @@ class InterGloss:
     segmentation: str
     translation: Optional[str]
     glossed: Optional[str]
-    lemma_indices: Optional[List[List[int]]]
+    lemma_indices: Optional[Iterable[List[int]]]
 
     def __repr__(self):
         return f"InterGloss(segmentation='{self.segmentation}', glossed={self.glossed})"
@@ -89,6 +89,7 @@ class GlossEntry:
     orig_tokens: List[str] = field(init=False)
     segm_tokens: List[Token] = field(init=False)
     gloss_tokens: List[Token] = field(init=False)
+    device: str = 'cpu'
 
     def __post_init__(self):
         prep = GlossingPreprocessor()

@@ -5,3 +5,4 @@ venv
 .env
 experiments/
 logs/
+temp/
