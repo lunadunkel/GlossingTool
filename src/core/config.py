@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, asdict
-from typing import Optional, List
+from typing import Optional, List, Union
 from pathlib import Path
 import yaml
 
@@ -31,7 +31,7 @@ class SegmentationConfig(ModelConfig):
     """Конфигурация модели сегментации"""
     vocab_size: int
     emb_dim: int = 32
-    hidden_dim: int = 256
+    hidden_dim: Union[int, list, tuple] = 256
     num_labels: int = 3  # B, I, O
     n_layers: int = 3
     dropout: float = 0.4
