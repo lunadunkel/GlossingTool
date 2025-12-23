@@ -8,9 +8,7 @@ from tqdm import tqdm
 from src.core.config import TrainingConfig
 from torch.utils.data import DataLoader
 from src.models.base_model import BasicNeuralClassifier
-from src.training.utils.metrics import calculate_accuracy, calculate_word_level_accuracy
-# from scripts.training.utils.setup_logger import get_logger
-# from src.training.utils.validation import validate_model
+from src.training.utils.metrics import TrainingHistory, calculate_accuracy, calculate_word_level_accuracy
 
 class Trainer:
     def __init__(self, model, exp_name: str,
@@ -67,7 +65,7 @@ class Trainer:
                 for p, l, m in zip(preds, labels_list, mask_list):
                     if not (len(p) == len(l) == len(m)):
                         self.logger.error('Длины предсказаний, лейблов и масок не совпадают: pred={len(p)}, label={len(l)}, mask={len(m)}')
-                        raise ValueError(f"Length mismatch: pred={len(p)}, label={len(l)}, mask={len(m)}")
+                        raise ValueError(f"Ошибка длин: pred={len(p)}, label={len(l)}, mask={len(m)}")
 
                 all_preds.extend(preds)
                 all_labels.extend(labels_list)
@@ -95,7 +93,8 @@ class Trainer:
         best_accuracy = 0.0
         best_model_path = ""
         early_stopping_counter = 0
-        history = []
+        history = TrainingHistory()
+        
         num_epochs = self.config.num_epochs
         for epoch in range(num_epochs):
             self.model.train()
@@ -135,7 +134,7 @@ class Trainer:
                 'val_accuracy': val_accuracy,
                 'val_word_accuracy': word_level_accuracy
             }
-            history.append(epoch_log)
+            history += epoch_log
 
             if word_level_accuracy > best_accuracy:
                 best_accuracy = word_level_accuracy
@@ -161,6 +160,7 @@ class Trainer:
                     break
 
         log_file = f'{self.config.log_dir}/{self.exp_name}'
-        with open(f'{self.config.log_dir}/{self.exp_name}.json', 'w', encoding='utf-8') as f:
-            json.dump(history, f, indent=4, ensure_ascii=False)
+        history.save_json(log_file)
+        # with open(f'{self.config.log_dir}/{self.exp_name}.json', 'w', encoding='utf-8') as f:
+        #     json.dump(history, f, indent=4, ensure_ascii=False)
         self.logger.info(f"История обучения сохранена: '{log_file}.json")

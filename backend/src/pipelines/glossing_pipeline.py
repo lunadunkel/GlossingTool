@@ -1,6 +1,7 @@
 import re
 from typing import List, Sequence
 
+from backend.src.core.data.project_exceptions import LengthMismatch
 from src.core.base_classes import SystemPipeline
 from src.core.data.preprocessing import GlossEntry, InterGloss
 
@@ -28,9 +29,7 @@ class GlossingPipeline(SystemPipeline):
 
             pattern = re.compile(r'^[а-яА-ЯёЁ.]+$')
             if len(segm.split()) != len(gloss.split()):
-                print(segm)
-                print(gloss)
-                raise ValueError(f'Количество слов в тексте {entry.text_name} в предложении {entry.line_num} не совпадает с сегментацией: {len(segm.split())} и {len(gloss.split())}')
+                raise LengthMismatch(entry.text_name, entry.line_num, segm.split(), gloss.split())
             indices = []
             for segm_word, gloss_word in zip(segm.split(), gloss.split()):
                 word_indices = []
@@ -39,7 +38,7 @@ class GlossingPipeline(SystemPipeline):
                         word_indices.append(i)
                 indices.append(word_indices)
             if len(indices) != len(segm.split()):
-                raise ValueError(f'Количество слов в тексте {entry.text_name} в предложении {entry.line_num} не совпадает с индексами: {len(segm.split())} и {len(gloss.split())}')
+                raise LengthMismatch(entry.text_name, entry.line_num, segm.split(), gloss.split())
 
             gloss_entry = InterGloss(id=entry.id,
                                orig_segm=orig_segm,

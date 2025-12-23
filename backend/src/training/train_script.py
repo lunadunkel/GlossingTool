@@ -1,10 +1,3 @@
-"""
-Скрипт обучения модели
-
-Использование:
-    python scripts/train.py --model model --config configs/model.yaml
-"""
-
 import os
 import sys
 import argparse
@@ -14,6 +7,14 @@ from dataclasses import asdict
 import torch
 import random
 import numpy as np
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+
+backend_str = str(BACKEND_DIR)
+if backend_str not in sys.path:
+    sys.path.insert(0, backend_str)
+
+from src.core.data.project_exceptions import ComponentInitializationError
 from src.pipelines.tagger_pipeline import TaggerPipeline
 from src.training.utils.logger import setup_logger
 from src.core.config import ExperimentConfig
@@ -92,11 +93,12 @@ def main():
     
     logger.info("Создание даталоадеров...")
 
-    if (model_name not in DATAMODULE_REGISTRY 
-        or model_name not in MODEL_REGISTRY 
-        or model_name not in PIPELINE_REGISTRY):
-        logger.error(f"Модель не зарегестрирована")
-        raise ValueError(f"Неизвестная модель: {model_name}")
+    if model_name not in DATAMODULE_REGISTRY: 
+        raise ComponentInitializationError(model_name, f'{model_name} отсутствует в зарегистрированных датамодулях')
+    if model_name not in MODEL_REGISTRY: 
+        raise ComponentInitializationError(model_name, f'{model_name} отсутствует в зарегистрированных моделях')
+    if model_name not in PIPELINE_REGISTRY: 
+        raise ComponentInitializationError(model_name, f'{model_name} отсутствует в зарегистрированных пайплайнах')
 
     pipeline = PIPELINE_REGISTRY[model_name]
     datamodule = DATAMODULE_REGISTRY[model_name]

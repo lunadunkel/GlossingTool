@@ -4,7 +4,6 @@ numpy
 tqdm
 scikit-learn
 python-dotenv
-fastapi
 pathlib
 uvicorn
 pyyaml
@@ -12,4 +11,3 @@ pandas
 pytest
 fastapi
 dotenv
-sqlalchemy

@@ -52,8 +52,8 @@ class TrainingConfig:
     random_seed: int = 42
     device: str = 'cpu'
     
-    checkpoint_dir: str = "checkpoints"
-    log_dir: str = "logs"
+    checkpoint_dir: str = "backend/checkpoints"
+    log_dir: str = "backend/logs"
     
     optimizer: str = "AdamW"
     weight_decay: float = 0.01
@@ -65,7 +65,7 @@ class TrainingConfig:
 @dataclass
 class DataConfig:
     """Конфигурация данных"""
-    texts_list: str = "src/core/data/texts_names.txt"
+    texts_list: str = "backend/src/core/data/texts_names.txt"
     train_split: float = 0.8
     val_split: float = 0.1
     test_split: float = 0.1

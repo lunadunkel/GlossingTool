@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from typing import Optional, Tuple, List
 
 from sklearn.model_selection import train_test_split
+from backend.src.core.data.project_exceptions import DataIsMissing
 from src.core.config import DataConfig
 from src.core.data.preprocessing import GlossDataSource
 
@@ -41,12 +42,12 @@ def clone_and_load_data(config: 'DataConfig', logger: logging.Logger, clone: boo
         data_source = GlossDataSource(repo_path, texts_list)
     else:
         if data_path is None:
-            raise
+            raise DataIsMissing
         data_source = GlossDataSource(data_path)
     try:
         gloss_entries = data_source.get_gloss_entries()
         if not gloss_entries:
-            raise RuntimeError("Данные отсутствуют")
+            raise DataIsMissing
     except Exception as e:
         logger.error(f'В ходе работы программы возникла ошибка: {str(e)}')
         raise Exception(e)

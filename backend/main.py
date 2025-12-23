@@ -91,15 +91,14 @@ def segment_text(request: SegmentationRequest, response_model=SegmentationRespon
 
     LOGGER.info(f'Запрос на inference')
     result = subprocess.run([sys.executable,
-        "src/inference/inference_script.py",      # путь относительно backend/
-        "--config", "yaml_configs/CNN.yaml",      # относительно backend/
+        "src/inference/inference_script.py",
+        "--config", "yaml_configs/CNN.yaml",
         "--data_path", "src/core/data/temp/temp.txt",
         "--device", "cpu",
         "--name", 'fastAPI',
         "--logs", LOG_DIR],
         cwd=BACKEND_DIR
     )
-
 
     if result.returncode != 0:
         LOGGER.error("Ошибка в subprocess:")
@@ -143,7 +142,7 @@ def create_gloss(request: GlossRequest, response_model=GlossResponse):
         with open('backend/src/core/data/temp/temp_glossing.json') as file:
             glosses = json.load(file)
     except json.JSONDecodeError as e:
-        raise RuntimeError(f"Failed to parse output as JSON: {result.stdout}") from e
+        raise RuntimeError(f"Ошибка в обработке json: {result.stdout}") from e
     LOGGER.info(f'Response отправлен')
     return GlossResponse(segmentation=request.segmentation, glosses=glosses)
 
