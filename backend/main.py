@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import re
@@ -14,6 +15,10 @@ from fastapi.responses import FileResponse, JSONResponse
 from backend.src.core.data.get_example import text_from_repo
 from backend.src.core.lemma_inserter import LemmaInserter
 from backend.src.training.utils.logger import setup_logger
+
+# if sys.platform == "win32":
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 app = FastAPI(title="Glossing API")
 
@@ -86,7 +91,7 @@ def segment_text(request: SegmentationRequest, response_model=SegmentationRespon
     
     os.makedirs('backend/src/core/data/temp', exist_ok=True)
     LOGGER.info(f'Запись данных в temp')
-    with open('backend/src/core/data/temp/temp.txt', 'w') as file:
+    with open('backend/src/core/data/temp/temp.txt', 'w', ) as file:
         file.write(f'1>\t{text}')
 
     LOGGER.info(f'Запрос на inference')
@@ -106,7 +111,7 @@ def segment_text(request: SegmentationRequest, response_model=SegmentationRespon
         LOGGER.error("STDERR:", result.stderr)
         raise RuntimeError("Инференс завершился с ошибкой")
 
-    with open('backend/src/core/data/temp/temp_segmentation.txt') as file:
+    with open('backend/src/core/data/temp/temp_segmentation.txt', encoding='utf-8') as file:
         segments = []
         for line in file:
             if segment := re.match(r'(\d+\>\t)(.*)', line.strip()):
@@ -139,7 +144,7 @@ def create_gloss(request: GlossRequest, response_model=GlossResponse):
 
     try:
         LOGGER.info(f'Запись в temp')
-        with open('backend/src/core/data/temp/temp_glossing.json') as file:
+        with open('backend/src/core/data/temp/temp_glossing.json', encoding='utf-8') as file:
             glosses = json.load(file)
     except json.JSONDecodeError as e:
         raise RuntimeError(f"Ошибка в обработке json: {result.stdout}") from e

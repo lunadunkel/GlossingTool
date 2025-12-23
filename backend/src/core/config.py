@@ -85,7 +85,7 @@ class ExperimentConfig:
     @classmethod
     def from_yaml(cls, path: str) -> 'ExperimentConfig':
         """Загрузить конфигурацию из YAML"""
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             config_dict = yaml.safe_load(f)
         
         task = config_dict['task']
@@ -116,7 +116,7 @@ class ExperimentConfig:
             'tokenizer': self.tokenizer.to_dict()
         }
         
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             yaml.dump(config_dict, f, default_flow_style=False)
 
 @dataclass
@@ -132,7 +132,7 @@ class InferenceConfig:
     @classmethod
     def from_yaml(cls, path: str) -> 'InferenceConfig':
         """Загрузить конфигурацию из YAML"""
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             config_dict = yaml.safe_load(f)
         
         task = config_dict['task']

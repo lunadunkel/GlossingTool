@@ -35,7 +35,7 @@ def write_data(task, file_path, text, translation):
     os.makedirs(file_path, exist_ok=True)
     match task:
         case 'segmentation':
-            with open(f'{file_path}/temp_{task}.txt', 'w') as file:
+            with open(f'{file_path}/temp_{task}.txt', 'w', encoding='utf-8') as file:
                 for num, (niv, rus) in enumerate(zip(text, translation), 1):
                     file.write(f'{num}>\t{niv}\n')
                     file.write(f'{num}<\t\n')

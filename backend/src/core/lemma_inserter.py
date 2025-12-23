@@ -12,9 +12,9 @@ if backend_str not in sys.path:
     
 class LemmaInserter:
     def __init__(self):
-        with open('vocabularies/nivkh_vocab.json') as file:
+        with open('vocabularies/nivkh_vocab.json', encoding='utf-8') as file:
             self.vocab = json.load(file)
-        with open('vocabularies/morph2gloss.json') as file:
+        with open('vocabularies/morph2gloss.json', encoding='utf-8') as file:
             self.morph2gloss = json.load(file) 
     
     def find_meaning(self, word):
@@ -54,7 +54,7 @@ def main():
     glosses = LEMMA_INSERTER.gloss_sent_lemmas(text)
     path_to_write = 'backend/src/core/data/temp'
     os.makedirs(path_to_write, exist_ok=True)
-    with open('backend/src/core/data/temp/temp_glossing.json', 'w') as file:
+    with open('backend/src/core/data/temp/temp_glossing.json', 'w', encoding='utf-8') as file:
         file.write(json.dumps(glosses, ensure_ascii=False))
 
 
