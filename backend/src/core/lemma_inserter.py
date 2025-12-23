@@ -52,9 +52,9 @@ def main():
     text = args.sent
     LEMMA_INSERTER = LemmaInserter()
     glosses = LEMMA_INSERTER.gloss_sent_lemmas(text)
-    path_to_write = 'backend/src/core/data/temp'
+    path_to_write = 'src/core/data/temp'
     os.makedirs(path_to_write, exist_ok=True)
-    with open('backend/src/core/data/temp/temp_glossing.json', 'w', encoding='utf-8') as file:
+    with open('src/core/data/temp/temp_glossing.json', 'w', encoding='utf-8') as file:
         file.write(json.dumps(glosses, ensure_ascii=False))
 
 
