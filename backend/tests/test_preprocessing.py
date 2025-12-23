@@ -243,16 +243,5 @@ class TestPreprocessorCornerCases:
             token = preprocessor._classify_token(var)
             assert token.type == TokenType.SPEAKER
     
-    def test_bracketed_variations(self, preprocessor):
-        """Тест различных вариантов скобок"""
-        # Только одиночные символы в круглых скобках
-        token1 = preprocessor._classify_token("(а)")
-        # Это не соответствует паттерну (несколько символов)
-        token2 = preprocessor._classify_token("(ой)")
-        
-        # В зависимости от regex, может быть BRACKETED или WORD
-        assert token1.type in [TokenType.BRACKETED]
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

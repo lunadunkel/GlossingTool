@@ -155,10 +155,12 @@ class ContentReader:
     def _read_content_from_path(self, path: Path):
         with open(path, "r", encoding="utf8") as f:
             for line in f:
+                # print(line)
                 line = line.strip()
                 line = line.lstrip('\ufeff')
                 if not line:
                     if self.current.get('segmented') != '':
+                        # print(self.current)
                         self._push_current()
                         self._update_dictionary()
                     continue
@@ -170,6 +172,7 @@ class ContentReader:
                         continue
                     case _:
                         self._add_line(content_type, data)
+        # print(self.current)        
         self._push_current()
     
     def read_content(self, data: list[str] | Path) -> List[GlossEntry]:

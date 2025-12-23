@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GlossingTool</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Glossing Tool</h1>
+                <p>Полуавтоматическое глоссирование с возможностью редактирования</p>
+            </div>
+
+            <div class="progress-bar">
+                <div class="step">
+                    <div class="step-circle active" id="step1">1</div>
+                </div>
+                <div class="step-line" id="line1"></div>
+                <div class="step">
+                    <div class="step-circle" id="step2">2</div>
+                </div>
+                <div class="step-line" id="line2"></div>
+                <div class="step">
+                    <div class="step-circle" id="step3">3</div>
+                </div>
+                <div class="step-line" id="line3"></div>
+                <div class="step">
+                    <div class="step-circle" id="step4">4</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="page active" id="page1">
+                    <h2>Введите предложение</h2>
+
+                    <div class="mode-selector">
+                        <div class="mode-option" id="mode-manual" onclick="selectMode('manual')">
+                            <div class="mode-label">Ввести вручную</div>
+                        </div>
+                        <div class="mode-option selected" id="mode-repo" onclick="selectMode('repo')">
+                            <div class="mode-label">Из репозитория</div>
+                        </div>
+                    </div>
+
+                    <div id="manual-input" style="display: none;">
+                        <textarea id="input-text" placeholder="К’еӄ к’лур̌ эӄор̌ п’ур̌ вид"></textarea>
+                    </div>
+
+                    <div id="repo-input">
+                    </div>
+                    <!-- Спиннер для сегментации -->
+                    <div id="segment-loading-step1" class="loading" style="display: none; margin: 20px 0;">
+                        <div class="spinner"></div>
+                        <p>Выполняется сегментация...</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="goToStep2()">Далее</button>
+                </div>
+
+                <!--Сегментация-->
+                <div class="page" id="page2">
+                    <span class="back-btn" onclick="goToStep(1)">Назад</span>
+                    <h2>Сегментация предложения</h2>
+
+                    <div class="info-box">
+                        <strong>Совет:</strong> Кликните на морфему для редактирования. Нажмите кнопку → между морфемами
+                        для объединения.
+                    </div>
+
+                    <div class="segment-container" id="segment-container"></div>
+
+                    <div style="color: #9e9e9e; font-style: italic; margin-bottom: 25px; font-size: 14px;">
+                        <strong>Оригинал:</strong> <span id="original-text"></span>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="goToStep3()">Далее</button>
+                </div>
+
+                <div class="page" id="page3">
+                    <span class="back-btn" onclick="goToStep(2)">Назад</span>
+                    <h2>Глоссирование</h2>
+
+                    <div class="info-box" style="margin-bottom: 25px;">
+                        <div style="font-family: 'Courier New', monospace; font-size: 16px; color: #627741; font-weight: 600;"
+                            id="segmented-display"></div>
+                    </div>
+
+                    <div id="gloss-container"></div>
+
+                    <button class="btn btn-primary" onclick="goToStep4()">Получить результат</button>
+                </div>
+
+                <div class="page" id="page4">
+                    <h2>Результат глоссирования</h2>
+
+                    <div class="result-box">
+                        <div class="result-label">
+                            <span>Оригинал</span>
+                            <button class="copy-btn" onclick="copyToClipboard('result-original')"><img
+                                    src="content_copy.svg" alt="Копировать" /></button>
+                        </div>
+                        <div class="result-text" id="result-original"></div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">
+                            <span>Сегментация</span>
+                            <button class="copy-btn" onclick="copyToClipboard('result-segmented')"><img
+                                    src="content_copy.svg" alt="Копировать" /></button>
+                        </div>
+                        <div class="result-text" id="result-segmented"></div>
+                    </div>
+
+                    <div class="result-box highlight">
+                        <div class="result-label">
+                            <span>Глоссы</span>
+                            <button class="copy-btn" onclick="copyToClipboard('result-glossed')"><img
+                                    src="content_copy.svg" alt="Копировать" /></button>
+                        </div>
+                        <div class="result-text" id="result-glossed"></div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">
+                            <span>Перевод (редактируемый)</span>
+                        </div>
+                        <div class="result-text editable" id="result-translation" contenteditable="true">
+                            Введите перевод предложения...
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="reset()">Начать заново</button>
+                        <button class="btn btn-primary" onclick="copyAll()">Скопировать всё</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+
+</html>

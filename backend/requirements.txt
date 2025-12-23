@@ -10,3 +10,6 @@ uvicorn
 pyyaml
 pandas
 pytest
+fastapi
+dotenv
+sqlalchemy

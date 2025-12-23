@@ -7,6 +7,14 @@ from dataclasses import asdict
 import torch
 import random
 import numpy as np
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+
+backend_str = str(BACKEND_DIR)
+if backend_str not in sys.path:
+    sys.path.insert(0, backend_str)
+
+
 from src.core.data.preprocessing import GlossDataSource
 from src.inference.inference import Inference
 from src.pipelines.tagger_pipeline import TaggerPipeline
@@ -54,6 +62,18 @@ def main():
         required=False,
         help="Device 'cpu' or 'cuda" 
     )
+    parser.add_argument(
+        "--logs",
+        type=str,
+        required=False,
+        help="Path to logging" 
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        required=False,
+        help="Name of experiment" 
+    )
     args = parser.parse_args()
 
     config = InferenceConfig.from_yaml(args.config)
@@ -69,10 +89,17 @@ def main():
         device = "cpu"
     
     config.model.device = device
+
+    if args.logs is not None and args.name is not None:
+        name = args.name
+        path_to_logs = args.logs
+    else:
+        name = config.name
+        path_to_logs = config.training.log_dir
     
     logger = setup_logger(
-        config.name,
-        log_dir=config.training.log_dir
+        name,
+        log_dir=path_to_logs
     )
     
     logger.info(f"="*80)
@@ -96,9 +123,6 @@ def main():
     
     predictions = inference.predict(inference_data)
     write_data(model_name, 'src/core/data/temp', predictions, translation_data)
-    for i, p in zip(inference_data, predictions):
-        print(i)
-        print(p)
     logger.info(f'Результаты {config.task} записаны в \'src/core/data/temp_{config.task}.txt\'')
 
 
