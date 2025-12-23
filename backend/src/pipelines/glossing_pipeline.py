@@ -1,7 +1,16 @@
+from pathlib import Path
 import re
+import sys
 from typing import List, Sequence
 
-from backend.src.core.data.project_exceptions import LengthMismatch
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+
+backend_str = str(BACKEND_DIR)
+if backend_str not in sys.path:
+    sys.path.insert(0, backend_str)
+
+
+from src.core.data.project_exceptions import LengthMismatch
 from src.core.base_classes import SystemPipeline
 from src.core.data.preprocessing import GlossEntry, InterGloss
 

@@ -1,11 +1,19 @@
 import logging
 import os
+from pathlib import Path
 import subprocess
+import sys
 from dotenv import load_dotenv
 from typing import Optional, Tuple, List
 
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+
+backend_str = str(BACKEND_DIR)
+if backend_str not in sys.path:
+    sys.path.insert(0, backend_str)
+
 from sklearn.model_selection import train_test_split
-from backend.src.core.data.project_exceptions import DataIsMissing
+from src.core.data.project_exceptions import DataIsMissing
 from src.core.config import DataConfig
 from src.core.data.preprocessing import GlossDataSource
 

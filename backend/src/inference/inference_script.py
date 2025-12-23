@@ -15,7 +15,7 @@ if backend_str not in sys.path:
     sys.path.insert(0, backend_str)
 
 
-from backend.src.core.data.project_exceptions import DataIsMissing
+from src.core.data.project_exceptions import DataIsMissing
 from src.core.data.preprocessing import GlossDataSource
 from src.inference.inference import Inference
 from src.pipelines.tagger_pipeline import TaggerPipeline
@@ -123,8 +123,8 @@ def main():
     inference = Inference(config=config, model=model, logger=logger, device=device)
     
     predictions = inference.predict(inference_data)
-    write_data(model_name, 'backend/src/core/data/temp', predictions, translation_data)
-    logger.info(f'Результаты {config.task} записаны в \'backend/src/core/data/temp_{config.task}.txt\'')
+    write_data(model_name, 'src/core/data/temp', predictions, translation_data)
+    logger.info(f'Результаты {config.task} записаны в \'src/core/data/temp_{config.task}.txt\'')
 
 
 if __name__ == "__main__":

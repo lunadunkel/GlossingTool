@@ -52,8 +52,8 @@ class TrainingConfig:
     random_seed: int = 42
     device: str = 'cpu'
     
-    checkpoint_dir: str = "backend/checkpoints"
-    log_dir: str = "backend/logs"
+    checkpoint_dir: str = "checkpoints"
+    log_dir: str = "logs"
     
     optimizer: str = "AdamW"
     weight_decay: float = 0.01
