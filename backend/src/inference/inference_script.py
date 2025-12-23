@@ -15,7 +15,7 @@ if backend_str not in sys.path:
     sys.path.insert(0, backend_str)
 
 
-from src.core.data.project_exceptions import DataIsMissing
+from src.core.data.project_exceptions import DataMissing
 from src.core.data.preprocessing import GlossDataSource
 from src.inference.inference import Inference
 from src.pipelines.tagger_pipeline import TaggerPipeline
@@ -117,7 +117,7 @@ def main():
     inference_data = ['\t'.join(x.segmented.split()) for x in data_source.get_gloss_entries()]
     translation_data = [x.translation for x in data_source.get_gloss_entries()]
     if not inference_data:
-        raise DataIsMissing
+        raise DataMissing
 
     model = MODEL_REGISTRY[model_name]
     inference = Inference(config=config, model=model, logger=logger, device=device)

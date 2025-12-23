@@ -2,6 +2,7 @@ from typing import Any
 
 
 class DataError(Exception):
+    """Базовое для ошибок с данными"""
     pass
 
 class LengthMismatch(DataError):
@@ -9,22 +10,13 @@ class LengthMismatch(DataError):
     def __init__(self, text: str, sent: str, value_one: Any, value_two: Any):
         super().__init__(f"Количество слов в тексте {text} в предложении {sent} не совпадает с данными: {len(value_one)} vs {len(value_two)}")
 
-class DataIsMissing(DataError):
+class DataMissing(DataError):
     """Ошибка отсутствия данных"""
     def __init__(self):
         super().__init__(f"Данные не были предоставлены")
 
-
 class ComponentError(Exception):
     """Базовое для ошибок компонентов"""
-    pass
-
-class ComponentNotRegisteredError(ComponentError):
-    """Компонент не зарегистрирован"""
-    def __init__(self, component_type: str, name: str):
-        self.component_type = component_type
-        self.name = name
-        super().__init__(f"{component_type} '{name}' is not registered")
 
 class ComponentInitializationError(ComponentError):
     """Ошибка инициализации компонента"""
